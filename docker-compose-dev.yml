@@ -1,0 +1,39 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: sme_autosservico_bff_dev
+    command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      DJANGO_DEBUG: "True"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+      - "5678:5678"
+    depends_on:
+      - keydb
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: sme_autosservico_bff_worker_dev
+    command: celery -A config worker --loglevel=info
+    environment:
+      DJANGO_DEBUG: "True"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      - keydb
+
+  keydb:
+    image: eqalpha/keydb:latest
+    container_name: sme_autosservico_bff_keydb_dev
+    ports:
+      - "6379:6379"
