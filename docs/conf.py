@@ -1,4 +1,4 @@
-"""Sphinx configuration for the SME Autosservico BFF documentation."""
+"""Configuração do Sphinx para a documentação do SME Autosservico BFF."""
 
 import os
 import sys

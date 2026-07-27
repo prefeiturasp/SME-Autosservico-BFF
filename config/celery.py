@@ -1,4 +1,4 @@
-"""Celery application factory para o SME Autosservico BFF.
+"""Fábrica da aplicação Celery para o SME Autosservico BFF.
 
 O broker/backend (KeyDB) e demais opções do Celery são lidos de
 ``config.settings`` (variáveis prefixadas com ``CELERY_``), conforme o

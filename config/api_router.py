@@ -1,6 +1,7 @@
-"""Central DRF router for ViewSets shared across the project.
+"""Router central do DRF para ViewSets compartilhados entre os apps.
 
-Register ViewSets here as new domain apps are added, e.g.::
+Registre ViewSets aqui conforme novos apps de domínio forem adicionados,
+por exemplo::
 
     router.register("unidades", UnidadeViewSet)
 """

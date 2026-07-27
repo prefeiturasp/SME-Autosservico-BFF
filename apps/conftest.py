@@ -1,4 +1,4 @@
-"""Shared pytest fixtures for all apps."""
+"""Fixtures de pytest compartilhadas entre todos os apps."""
 
 import pytest
 from rest_framework.test import APIClient
@@ -6,5 +6,5 @@ from rest_framework.test import APIClient
 
 @pytest.fixture
 def api_client() -> APIClient:
-    """Return a DRF APIClient instance for making test requests."""
+    """Retorna uma instância de APIClient do DRF para requisições de teste."""
     return APIClient()
