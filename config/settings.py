@@ -137,11 +137,20 @@ SPECTACULAR_SETTINGS: dict[str, Any] = {
     "VERSION": "1.0.0",
     # drf-spectacular não herda o DEFAULT_PERMISSION_CLASSES global do
     # DRF (SERVE_PERMISSIONS tem seu próprio default, AllowAny) — por
-    # isso é preciso declarar explicitamente aqui para exigir a mesma
-    # API Key das demais rotas (não há login de admin, já que este
-    # serviço não possui banco de dados/usuários). A authentication
+    # isso é preciso declarar explicitamente aqui. Fora de DEBUG, exige
+    # a mesma API Key das demais rotas (não há login de admin, já que
+    # este serviço não possui banco de dados/usuários). Em DEBUG, fica
+    # aberto para permitir abrir o Swagger direto pelo navegador em
+    # desenvolvimento local (uma navegação simples não consegue anexar
+    # o header X-Api-Key). Em RUNNING_TESTS force-se a exigência da
+    # chave independente do DEBUG do .env local, para os testes abaixo
+    # não dependerem do ambiente de quem os executa. A authentication
     # class já é herdada corretamente do DEFAULT_AUTHENTICATION_CLASSES.
-    "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAuthenticated"],
+    "SERVE_PERMISSIONS": (
+        ["rest_framework.permissions.AllowAny"]
+        if DEBUG and not RUNNING_TESTS
+        else ["rest_framework.permissions.IsAuthenticated"]
+    ),
     "SCHEMA_PATH_PREFIX": "/api/v1/",
     "APPEND_COMPONENTS": {
         "securitySchemes": {
