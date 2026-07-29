@@ -9,3 +9,4 @@ autosserviço da SME.
    :caption: Domínios:
 
    dominios/core/index
+   dominios/zabbix/index

@@ -32,6 +32,21 @@ services:
     depends_on:
       - keydb
 
+  beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: sme_autosservico_bff_beat_dev
+    command: celery -A config beat --loglevel=info
+    environment:
+      DJANGO_DEBUG: "True"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      - keydb
+
   keydb:
     image: eqalpha/keydb:latest
     container_name: sme_autosservico_bff_keydb_dev

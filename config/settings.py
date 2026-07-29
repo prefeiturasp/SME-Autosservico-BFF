@@ -7,6 +7,7 @@ tabelas SQL nem possui migrations locais (ver arquitetura C3).
 """
 
 import sys
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
@@ -62,6 +63,7 @@ THIRD_PARTY_APPS = [
 ]
 LOCAL_APPS = [
     "apps.core",
+    "apps.zabbix",
 ]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -172,11 +174,53 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TASK_TIME_LIMIT = 30
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": env("KEYDB_CACHE_URL", default="redis://keydb:6379/1"),
-        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+# Durante os testes usa cache em memória (rápido e isolado, sem exigir
+# um KeyDB de verdade rodando). Fora dos testes, usa o KeyDB (BFF_BROKER).
+CACHES: dict[str, dict[str, Any]]
+if RUNNING_TESTS:
+    CACHES = {
+        "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": env("KEYDB_CACHE_URL", default="redis://keydb:6379/1"),
+            "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+        },
+    }
+
+# Zabbix (a camada de request nunca chama o Zabbix diretamente — só lê o
+# cache; quem chama de verdade é uma Celery task, ver apps/zabbix/tasks.py).
+ZABBIX_API_URL = env(
+    "ZABBIX_API_URL", default="" if DEBUG or RUNNING_TESTS else None
+)
+ZABBIX_API_TOKEN = env(
+    "ZABBIX_API_TOKEN", default="" if DEBUG or RUNNING_TESTS else None
+)
+ZABBIX_DEFAULT_HOST = env("ZABBIX_DEFAULT_HOST", default="Zabbix server")
+ZABBIX_RECENT_WINDOW_MS = env.int(
+    "ZABBIX_RECENT_WINDOW_MS", default=86_400_000
+)
+ZABBIX_HTTP_TIMEOUT = env.int("ZABBIX_HTTP_TIMEOUT", default=10)
+ZABBIX_CACHE_TTL_STATUS_SECONDS = env.int(
+    "ZABBIX_CACHE_TTL_STATUS_SECONDS", default=60
+)
+ZABBIX_CACHE_TTL_JENKINS_SECONDS = env.int(
+    "ZABBIX_CACHE_TTL_JENKINS_SECONDS", default=90
+)
+ZABBIX_CACHE_TTL_DATABASE_SECONDS = env.int(
+    "ZABBIX_CACHE_TTL_DATABASE_SECONDS", default=180
+)
+ZABBIX_DATABASE_BEAT_INTERVAL_SECONDS = env.int(
+    "ZABBIX_DATABASE_BEAT_INTERVAL_SECONDS", default=90
+)
+ZABBIX_LOCK_TTL_SECONDS = env.int("ZABBIX_LOCK_TTL_SECONDS", default=30)
+
+CELERY_BEAT_SCHEDULE = {
+    "zabbix-atualizar-status-bancos": {
+        "task": "zabbix.atualizar_status_bancos",
+        "schedule": timedelta(seconds=ZABBIX_DATABASE_BEAT_INTERVAL_SECONDS),
     },
 }
 
