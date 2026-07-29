@@ -161,13 +161,22 @@ A documentação de domínio (regras de negócio, decisões arquiteturais) fica 
 
 O endpoint `GET /api/v1/health/` retorna `{"status": "ok"}` e não exige autenticação. É utilizado por probes de liveness/orquestradores para verificar se o processo da aplicação está no ar.
 
+## 📡 Zabbix
+
+Integração com o Zabbix (porte do que hoje vive no `SME-Autosservico-Frontend`, mesmo contrato de rotas/resposta):
+
+- `GET /api/v1/zabbix/status/<preset>/` (`producao` ou `filas`) — status de disponibilidade, via `trigger.get`.
+- `GET /api/v1/zabbix/database/` — status de banco de dados por sistema, via `item.get`.
+- `GET /api/v1/zabbix/jenkins/job/` — resumo de build do Jenkins, também lido via `item.get` (outro sistema já coleta os dados do Jenkins e grava no Zabbix).
+
+A camada de request nunca chama o Zabbix diretamente — só lê o cache do `BFF_BROKER` (KeyDB). Em cache frio, dispara uma Celery task em background e devolve um fallback seguro na hora; o status de banco de dados também é atualizado periodicamente por uma Celery Beat. Ver `docs/dominios/zabbix/` para detalhes.
+
 ## 🗺️ Roadmap
 
-Próximos cards já mapeados para a evolução deste BFF (fora do escopo desta estruturação inicial):
+Próximos cards já mapeados para a evolução deste BFF:
 
-- Integrar o **SME Sidecar SDK** (circuit breaker/retry + tracing), pré-requisito das integrações abaixo.
+- Integrar o **SME Sidecar SDK** (circuit breaker/retry + tracing) nas integrações já existentes.
 - Implementar comunicação com o **Azure DevOps** (status de bugs/pipelines).
-- Implementar comunicação com o **Zabbix** (saúde do sistema).
 - Implementar comunicação com o **Grafana** (observabilidade/telemetria).
 
 ## 📄 Licença

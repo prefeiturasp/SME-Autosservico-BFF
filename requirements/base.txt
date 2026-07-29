@@ -12,3 +12,6 @@ drf-spectacular==0.28.0
 celery==5.4.0
 redis==5.2.1
 django-redis==5.4.0
+
+# Cliente HTTP (integrações externas, ex.: Zabbix)
+httpx>=0.27

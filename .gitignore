@@ -36,6 +36,10 @@ htmlcov/
 # mypy
 .mypy_cache/
 
+# Celery beat
+celerybeat-schedule
+celerybeat.pid
+
 # Sphinx documentation
 docs/_build/
 docs/api/

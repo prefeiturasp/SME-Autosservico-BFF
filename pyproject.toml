@@ -63,6 +63,8 @@ ignore = [
 "conftest.py" = ["D100"]
 "apps/*/conftest.py" = ["D100"]
 
+"apps/zabbix/api/serializers.py" = ["N815"]
+
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
