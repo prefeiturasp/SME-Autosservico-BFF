@@ -227,6 +227,18 @@ AZURE_DEVOPS_PAT = env(
 )
 AZURE_DEVOPS_ORGANIZATION = env("AZURE_DEVOPS_ORGANIZATION", default="")
 
+# Kibana (infraestrutura genérica de leitura de métricas via proxy de
+# busca do Kibana — ver apps/core/client_kibana.py). Ainda sem nenhum
+# domínio de negócio consumindo isso; só o cliente está disponível.
+KIBANA_URL = env("KIBANA_URL", default="" if DEBUG or RUNNING_TESTS else None)
+KIBANA_USERNAME = env(
+    "KIBANA_USERNAME", default="" if DEBUG or RUNNING_TESTS else None
+)
+KIBANA_PASSWORD = env(
+    "KIBANA_PASSWORD", default="" if DEBUG or RUNNING_TESTS else None
+)
+KIBANA_HTTP_TIMEOUT = env.int("KIBANA_HTTP_TIMEOUT", default=10)
+
 CELERY_BEAT_SCHEDULE = {
     "zabbix-atualizar-status-bancos": {
         "task": "zabbix.atualizar_status_bancos",
