@@ -171,12 +171,27 @@ Integração com o Zabbix (porte do que hoje vive no `SME-Autosservico-Frontend`
 
 A camada de request nunca chama o Zabbix diretamente — só lê o cache do `BFF_BROKER` (KeyDB). Em cache frio, dispara uma Celery task em background e devolve um fallback seguro na hora; o status de banco de dados também é atualizado periodicamente por uma Celery Beat. Ver `docs/dominios/zabbix/` para detalhes.
 
+## ☁️ Azure DevOps
+
+Integração direta com a REST API do Azure DevOps (`dev.azure.com`), sem serviço intermediário, devolvendo o mesmo contrato de resposta já consumido pelo frontend:
+
+- `GET /api/v1/azure/backlog/?project_name=<projeto>` — backlog de work items do projeto, separado entre `parents` e `children`, com as métricas de bugs do ciclo (`total_cycle`, `open`, `in_progress`, `resolved` e o tempo médio de atendimento já formatado em pt-br).
+- `POST /api/v1/azure/backlog/` — mesmo backlog, com os filtros no corpo (listas em vez de valores separados por vírgula).
+- `GET /api/v1/azure/backlog/diagnostics/?project_name=<projeto>` — contagem de work items por tipo, com amostra dos 20 primeiros. Útil para descobrir quais tipos um projeto usa antes de configurar os filtros.
+- `GET /api/v1/azure/projects/` — projetos da organização, paginados por `top`/`skip`/`continuation_token`.
+
+Filtros opcionais do backlog: `organization`, `start_date`/`end_date` (`YYYY-MM-DD`), `year`/`month`, `work_item_types`, `states`, `area_paths`, `iteration_paths`, `assigned_to` e `tags` — no `GET`, os de lista aceitam valores separados por vírgula. Filtros equivalentes por `GET` e `POST` compartilham a mesma entrada de cache.
+
+O campo `pat` é aceito no corpo do `POST` por compatibilidade, mas **ignorado**: o token vem sempre de `AZURE_DEVOPS_PAT`, nunca da requisição.
+
+A carga acontece em duas etapas no Azure (uma consulta WIQL para os ids, depois os detalhes em lotes de 200), então a camada de request nunca a executa: em cache frio, dispara uma Celery task e devolve na hora um backlog vazio — o mesmo payload que o Azure produz quando nada casa com os filtros. Ver `docs/dominios/azure/` para detalhes.
+
 ## 🗺️ Roadmap
 
 Próximos cards já mapeados para a evolução deste BFF:
 
 - Integrar o **SME Sidecar SDK** (circuit breaker/retry + tracing) nas integrações já existentes.
-- Implementar comunicação com o **Azure DevOps** (status de bugs/pipelines).
+- Ampliar a comunicação com o **Azure DevOps** para o status de pipelines (o backlog de bugs já está implementado).
 - Implementar comunicação com o **Grafana** (observabilidade/telemetria).
 
 ## 📄 Licença
