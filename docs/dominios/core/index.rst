@@ -49,20 +49,55 @@ em vez de login de superusuário.
    :members:
    :noindex:
 
+Conectores genéricos de métricas
+----------------------------------------------------------------------
+
+Infraestrutura reaproveitável por qualquer domínio futuro de
+métricas/indicadores, adiantada a partir de duas provas de conceito
+(POC) que investigaram como trazer indicadores de sistemas legados da
+SME (piloto: SGP) para o Autosserviço:
+
+- **POC 1** (``poc-sgp-elasticsearch``): métricas já agregadas no ELK
+  Stack (Elasticsearch/Kibana) da SME — indicadores diários de acesso
+  já validados via query (total de ontem, média de 30 dias, evolução
+  histórica). Ver :mod:`apps.core.client_kibana`.
+- **POC 2** (``POC-Metricas-SGP``, Spassu): leitura somente-leitura,
+  via SQL puro, do PostgreSQL de cada sistema de origem — cobre
+  indicadores que não existem no Elastic (ex.: usuários com acesso
+  ativo, usuários de unidades educacionais, dados que vivem só no
+  banco relacional do sistema). Ver :mod:`apps.core.postgres_leitura`.
+
+**Nenhum dos dois ainda tem domínio de negócio consumindo-os** — só o
+cliente/utilitário de baixo nível está disponível. Quando o primeiro
+indicador real for implementado, a regra arquitetural de sempre se
+aplica: o I/O real (chamada ao Kibana, leitura no Postgres externo) só
+pode acontecer dentro de uma Celery task, nunca na view síncrona — a
+view só lê o cache (mesmo padrão de ``apps/zabbix`` e ``apps/azure``).
+
+.. automodule:: apps.core.client_kibana
+   :members:
+   :noindex:
+
+.. automodule:: apps.core.postgres_leitura
+   :members:
+   :noindex:
+
 Roadmap
 ----------------------------------------------------------------------
 
 Este BFF é a camada de orquestração e roteamento entre o frontend e as
 demais fontes de dados do autosserviço. Além do
-``SME-Autosservico-Backend`` (já integrado) e da infraestrutura de
-Celery/KeyDB (já disponível, sem tasks reais ainda), os próximos passos
+``SME-Autosservico-Backend``, Zabbix e Azure DevOps (já integrados) e
+da infraestrutura de Celery/KeyDB (já disponível), os próximos passos
 previstos são:
 
 - Integração do **SME Sidecar SDK** (circuit breaker/retry + tracing),
   pré-requisito das integrações abaixo.
-- Azure DevOps (status de bugs/pipelines).
-- Zabbix (saúde do sistema).
-- Grafana (observabilidade/telemetria).
+- Domínio de métricas/indicadores (SGP piloto) usando os conectores
+  genéricos acima — nome do app e escopo do primeiro indicador ainda
+  em definição.
+- Demais sistemas candidatos ao mesmo padrão de conector, conforme a
+  POC 2: SIGPAE, CoreSSO, PTRF.
 
 Cada um deve ganhar seu próprio app de domínio (``apps/<dominio>``) e a
 respectiva página em ``docs/dominios/<dominio>/index.rst`` quando for

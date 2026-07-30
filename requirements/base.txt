@@ -15,3 +15,7 @@ django-redis==5.4.0
 
 # Cliente HTTP (integrações externas, ex.: Zabbix)
 httpx>=0.27
+
+# Leitura somente-leitura de bancos externos (ex.: SGP) — variante
+# "binary" de propósito.
+psycopg[binary]>=3.2
