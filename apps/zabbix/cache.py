@@ -6,27 +6,15 @@ em background (ver ``apps/zabbix/tasks.py``) e devolve um fallback
 seguro na hora, sem bloquear a requisição.
 """
 
-import hashlib
-from typing import Any
+from apps.core.cache import hash_chave as _hash
+from apps.core.cache import obter_ou_marcar_para_atualizar
 
-from django.core.cache import cache
-
-
-def _hash(*partes: str) -> str:
-    """Gera um hash curto e estável a partir de valores arbitrários.
-
-    Usado para compor chaves de cache a partir de query params vindos
-    do frontend (project/host/system), que podem ter acentos, espaços
-    ou tamanho arbitrário — evita chaves gigantes/caracteres inválidos
-    no Redis e evita colisões de normalização.
-
-    Args:
-        *partes: Valores a compor no hash, na ordem recebida.
-
-    Returns:
-        Hash SHA-256 hexadecimal dos valores concatenados.
-    """
-    return hashlib.sha256("|".join(partes).encode()).hexdigest()
+__all__ = [
+    "chave_database",
+    "chave_jenkins",
+    "chave_status",
+    "obter_ou_marcar_para_atualizar",
+]
 
 
 def chave_status(preset: str, host: str, project: str) -> str:
@@ -66,39 +54,3 @@ def chave_database(sistema: str) -> str:
         Chave de cache determinística para esse sistema.
     """
     return f"zabbix:database:{_hash(sistema)}"
-
-
-def obter_ou_marcar_para_atualizar(
-    chave: str,
-    tarefa: Any,
-    args: tuple,
-    *,
-    ttl_lock: int,
-) -> Any | None:
-    """Lê o cache; se vazio, dispara a task de atualização em background.
-
-    O lock evita disparos duplicados: se
-    duas requisições chegarem quase ao mesmo tempo com o cache frio,
-    só a primeira dispara a task — a segunda só encontra o lock já
-    ocupado e desiste de disparar de novo (mas ainda recebe o fallback
-    seguro da view).
-
-    Args:
-        chave: Chave de cache onde o valor já processado é procurado.
-        tarefa: Task Celery a disparar via ``.delay(*args)`` em caso
-            de cache frio (recebe a task, não o nome, para facilitar
-            os testes).
-        args: Argumentos posicionais repassados a ``tarefa.delay``.
-        ttl_lock: Tempo de vida (segundos) do lock de atualização.
-
-    Returns:
-        O valor cacheado, ou ``None`` quando o cache estava vazio (a
-        view decide o fallback seguro nesse caso).
-    """
-    valor = cache.get(chave)
-    if valor is not None:
-        return valor
-
-    if cache.add(f"{chave}:lock", 1, timeout=ttl_lock):
-        tarefa.delay(*args)
-    return None

@@ -64,6 +64,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "apps.core",
     "apps.zabbix",
+    "apps.azure",
 ]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -216,6 +217,15 @@ ZABBIX_DATABASE_BEAT_INTERVAL_SECONDS = env.int(
     "ZABBIX_DATABASE_BEAT_INTERVAL_SECONDS", default=90
 )
 ZABBIX_LOCK_TTL_SECONDS = env.int("ZABBIX_LOCK_TTL_SECONDS", default=30)
+
+# Azure DevOps (mesma regra do Zabbix: a camada de request nunca chama o
+# Azure diretamente — só lê o cache; quem chama é uma Celery task, ver
+# apps/azure/tasks.py). Só o que varia por ambiente vem daqui; endpoint,
+# timeout, TTLs e limites são constantes em apps/azure/constants.py.
+AZURE_DEVOPS_PAT = env(
+    "AZURE_DEVOPS_PAT", default="" if DEBUG or RUNNING_TESTS else None
+)
+AZURE_DEVOPS_ORGANIZATION = env("AZURE_DEVOPS_ORGANIZATION", default="")
 
 CELERY_BEAT_SCHEDULE = {
     "zabbix-atualizar-status-bancos": {

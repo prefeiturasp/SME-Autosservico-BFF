@@ -10,3 +10,4 @@ autosserviço da SME.
 
    dominios/core/index
    dominios/zabbix/index
+   dominios/azure/index
