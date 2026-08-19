@@ -33,7 +33,7 @@ class TestZabbixRpc:
 
     def test_monta_corpo_e_headers_corretos(self, settings) -> None:
         """O corpo e os headers seguem o envelope JSON-RPC 2.0 esperado."""
-        settings.ZABBIX_API_URL = "http://zabbix.local/api_jsonrpc.php"
+        settings.ZABBIX_API_URL = "https://zabbix.local/api_jsonrpc.php"
         settings.ZABBIX_API_TOKEN = "token-123"  # noqa: S105
         resposta = MagicMock(spec=httpx.Response)
         resposta.raise_for_status.return_value = None
