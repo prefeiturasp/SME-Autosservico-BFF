@@ -22,10 +22,12 @@ from apps.zabbix import cache as zabbix_cache
 from apps.zabbix import tasks
 from apps.zabbix.api.serializers import DatabaseStatusSerializer
 from apps.zabbix.api.serializers import JenkinsJobSummarySerializer
+from apps.zabbix.api.serializers import SistemaDisponibilidadeSerializer
 from apps.zabbix.api.serializers import ZabbixStatusSerializer
 from apps.zabbix.constants import CONFIGURACAO_BANCOS_POR_SISTEMA
 from apps.zabbix.constants import PRESETS_STATUS
 from apps.zabbix.services.database import sistema_configurado
+from apps.zabbix.services.disponibilidade import listar_sistemas
 from apps.zabbix.services.status import status_a_partir_de_triggers
 
 
@@ -93,6 +95,34 @@ class StatusPresetView(APIView):
             payload = status_a_partir_de_triggers([])
 
         serializer = self.serializer_class(data=payload)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.validated_data)
+
+
+class SistemasDisponibilidadeView(APIView):
+    """Lista as descrições de disponibilidade por ambiente dos sistemas.
+
+    Fonte de verdade estática (espelha o ``getSistemasPorSquad`` do
+    frontend): não consulta o Zabbix, não usa cache nem dispara Celery
+    task.
+    """
+
+    serializer_class = SistemaDisponibilidadeSerializer
+
+    @extend_schema(
+        tags=["zabbix"],
+        summary="Sistemas e descrições de disponibilidade por ambiente",
+        operation_id="zabbix_disponibilidade_sistemas",
+        responses=SistemaDisponibilidadeSerializer(many=True),
+    )
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        """Retorna a lista de sistemas com descrições por ambiente.
+
+        Returns:
+            Response: lista de sistemas com ``producao`` e, quando
+            aplicável, ``homologacao``.
+        """
+        serializer = self.serializer_class(data=listar_sistemas(), many=True)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.validated_data)
 

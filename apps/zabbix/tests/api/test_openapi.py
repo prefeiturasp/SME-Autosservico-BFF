@@ -11,7 +11,7 @@ class TestZabbixOpenApiSchema:
     def test_schema_inclui_as_operacoes_do_zabbix(
         self, api_client: APIClient, settings
     ) -> None:
-        """O schema gera com sucesso e inclui os 3 operationIds do app."""
+        """O schema gera com sucesso e inclui os operationIds do app."""
         settings.API_KEY = "chave-correta"
 
         response = api_client.get(
@@ -21,5 +21,6 @@ class TestZabbixOpenApiSchema:
         assert response.status_code == status.HTTP_200_OK
         conteudo = response.content
         assert b"zabbix_status_preset" in conteudo
+        assert b"zabbix_disponibilidade_sistemas" in conteudo
         assert b"zabbix_database_status" in conteudo
         assert b"zabbix_jenkins_job_summary" in conteudo
