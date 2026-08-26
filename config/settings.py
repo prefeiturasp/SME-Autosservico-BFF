@@ -65,6 +65,7 @@ LOCAL_APPS = [
     "apps.core",
     "apps.zabbix",
     "apps.azure",
+    "apps.sigpae",
 ]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -238,6 +239,22 @@ KIBANA_PASSWORD = env(
     "KIBANA_PASSWORD", default="" if DEBUG or RUNNING_TESTS else None
 )
 KIBANA_HTTP_TIMEOUT = env.int("KIBANA_HTTP_TIMEOUT", default=10)
+
+# SIGPAE (o BFF orquestra/cacheia as métricas servidas pelo backend do
+# autosserviço — ver apps/sigpae/client.py). A chave de API é a esperada
+# pelo backend no header ``API_KEY_HEADER``.
+AUTOSSERVICO_BACKEND_URL = env(
+    "AUTOSSERVICO_BACKEND_URL",
+    default="" if DEBUG or RUNNING_TESTS else None,
+)
+AUTOSSERVICO_BACKEND_API_KEY = env(
+    "AUTOSSERVICO_BACKEND_API_KEY",
+    default="" if DEBUG or RUNNING_TESTS else None,
+)
+SIGPAE_CACHE_TTL_METRICAS_SECONDS = env.int(
+    "SIGPAE_CACHE_TTL_METRICAS_SECONDS", default=300
+)
+SIGPAE_LOCK_TTL_SECONDS = env.int("SIGPAE_LOCK_TTL_SECONDS", default=30)
 
 CELERY_BEAT_SCHEDULE = {
     "zabbix-atualizar-status-bancos": {
