@@ -11,6 +11,7 @@ urlpatterns = [
     path(_API_V1, include("apps.core.api.urls", namespace="core")),
     path(_API_V1, include("apps.zabbix.api.urls", namespace="zabbix")),
     path(_API_V1, include("apps.azure.api.urls", namespace="azure")),
+    path(_API_V1, include("apps.sigpae.api.urls", namespace="sigpae")),
     path(_API_V1, include("config.api_router")),
     path(f"{_API_V1}schema/", SpectacularAPIView.as_view(), name="api-schema"),
     path(
