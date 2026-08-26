@@ -154,6 +154,51 @@ CONFIGURACAO_BANCOS_POR_SISTEMA: dict[
 }
 
 
+@dataclass(frozen=True)
+class DescricoesDisponibilidade:
+    """Descrições de trigger (Zabbix) por ambiente de um sistema.
+
+    Os valores são usados no filtro ``description`` do ``trigger.get``
+    (preset ``producao``) da "Disponibilidade do ambiente". Espelham os
+    campos ``zabbixQueryFrontend`` e ``zabbixQueryFrontendHomolog`` do
+    SME-Autosservico-Frontend.
+    """
+
+    producao: str
+    homologacao: str | None = None
+
+
+# Fonte de verdade das descrições de disponibilidade (frontend) por
+# sistema, em cada ambiente. Sistemas sem homologação monitorada usam
+# ``homologacao=None``.
+DISPONIBILIDADE_FRONTEND_POR_SISTEMA: dict[str, DescricoesDisponibilidade] = {
+    "Intranet": DescricoesDisponibilidade("PRD - Intranet", "HOM - Intranet"),
+    "Portal CEU": DescricoesDisponibilidade(
+        "PRD - Portal CEU", "HOM - Portal CEU"
+    ),
+    "Portal Educação": DescricoesDisponibilidade(
+        "PRD - Educacao", "HOM - Educacao"
+    ),
+    "SigPAE": DescricoesDisponibilidade("PRD - SIGPAE", "HOM - SIGPAE"),
+    "Escolhas": DescricoesDisponibilidade("PRD - Escolhas"),
+    "Novo SGP": DescricoesDisponibilidade("PRD - Novo SGP", "HOM - NovoSGP"),
+    "Serap": DescricoesDisponibilidade("PRD - Serap", "HOM - Serap"),
+    "Serap Estudantes": DescricoesDisponibilidade(
+        "PRD - Serap Estudantes", "HOM - Serap Estudantes"
+    ),
+    "IDEP": DescricoesDisponibilidade("PRD - Idep"),
+    "Currículo da Cidade": DescricoesDisponibilidade("PRD - Curriculo"),
+    "SigEscola": DescricoesDisponibilidade(
+        "PRD - PTRF - SIG Escola", "HOM - PTRF - SIG Escola"
+    ),
+    "Bens Físicos": DescricoesDisponibilidade("PRD - Portal Bens Fisicos"),
+    "Limpeza": DescricoesDisponibilidade("PRD - Limpeza"),
+    "Autosserviço": DescricoesDisponibilidade("PRD - AUTOSSERVICO"),
+    "Cdep": DescricoesDisponibilidade("PRD - CDEP"),
+    "Conecta Formação": DescricoesDisponibilidade("PRD - Conecta Formacao"),
+}
+
+
 def montar_parametros_trigger_producao(project: str, host: str) -> dict:
     """Monta os parâmetros de ``trigger.get`` do preset ``producao``.
 

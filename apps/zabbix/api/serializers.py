@@ -21,6 +21,14 @@ class ZabbixStatusSerializer(serializers.Serializer):
     lastIncidentAt = serializers.CharField(required=False)
 
 
+class SistemaDisponibilidadeSerializer(serializers.Serializer):
+    """Descrições de disponibilidade (por ambiente) de um sistema."""
+
+    sistema = serializers.CharField()
+    producao = serializers.CharField()
+    homologacao = serializers.CharField(required=False)
+
+
 class DatabaseInstanceStatusSerializer(serializers.Serializer):
     """Status de uma instância de banco de dados."""
 
