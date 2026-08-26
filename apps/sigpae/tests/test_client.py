@@ -34,7 +34,7 @@ class TestObterMetricas:
 
     def test_retorna_o_contrato(self, settings) -> None:
         """Uma resposta JSON de objeto é devolvida como dicionário."""
-        settings.AUTOSSERVICO_BACKEND_URL = "http://backend"
+        settings.AUTOSSERVICO_BACKEND_URL = "https://backend"
         settings.AUTOSSERVICO_BACKEND_API_KEY = "chave"
         contrato: dict[str, Any] = {"atualizado_em": None, "usuarios": {}}
 
@@ -49,7 +49,7 @@ class TestObterMetricas:
         self, mock_cls: MagicMock, settings
     ) -> None:
         """Um corpo que não é objeto JSON levanta BackendMetricasError."""
-        settings.AUTOSSERVICO_BACKEND_URL = "http://backend"
+        settings.AUTOSSERVICO_BACKEND_URL = "https://backend"
         _mock_cliente(mock_cls, _resposta_ok(["lista"]))
 
         with pytest.raises(BackendMetricasError):
@@ -57,7 +57,7 @@ class TestObterMetricas:
 
     def test_retenta_erro_transitorio(self, settings) -> None:
         """Uma falha de conexão é retentada até obter sucesso."""
-        settings.AUTOSSERVICO_BACKEND_URL = "http://backend"
+        settings.AUTOSSERVICO_BACKEND_URL = "https://backend"
         resposta = _resposta_ok({"ok": True})
 
         with (
@@ -76,7 +76,7 @@ class TestObterMetricas:
         self, mock_cls: MagicMock, settings
     ) -> None:
         """Um 404 não é retentado e propaga o erro."""
-        settings.AUTOSSERVICO_BACKEND_URL = "http://backend"
+        settings.AUTOSSERVICO_BACKEND_URL = "https://backend"
         resposta = MagicMock(spec=httpx.Response)
         resposta.raise_for_status.side_effect = httpx.HTTPStatusError(
             "404",
