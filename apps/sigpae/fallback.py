@@ -32,5 +32,15 @@ def metricas_indisponivel() -> dict[str, Any]:
                 "aguardando_codae": None,
                 "aprovadas_codae": None,
             },
+            "produtos_homologados": None,
+            "empresas_terceirizadas": None,
+            "solicitacoes_dietas_especiais": None,
+            "solicitacoes_alimentacoes": None,
+        },
+        "logistica": {
+            "cronogramas_entregas": None,
+            "fichas_tecnicas_produtos": None,
+            "fornecedores_distribuidores": None,
+            "layouts_embalagens": None,
         },
     }
