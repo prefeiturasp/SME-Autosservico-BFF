@@ -25,7 +25,11 @@ def _url() -> str:
 _CONTRATO = {
     "atualizado_em": "2026-08-25T10:00:00-03:00",
     "usuarios": {
-        "com_acesso_ativo": {"total": 10, "ativos_30_dias": 4},
+        "com_acesso_ativo": {
+            "total": 10,
+            "ativos_30_dias": 4,
+            "novos_30_dias": 2,
+        },
         "unicos_por_dia": None,
         "acessos_hoje": None,
         "por_tipo_perfil": {"codae": 3, "dre": 0, "ue": 0, "empresa": 0},
@@ -38,7 +42,17 @@ _CONTRATO = {
             "aprovadas_pelas_dres": None,
             "aguardando_codae": None,
             "aprovadas_codae": None,
-        }
+        },
+        "produtos_homologados": None,
+        "empresas_terceirizadas": None,
+        "solicitacoes_dietas_especiais": None,
+        "solicitacoes_alimentacoes": None,
+    },
+    "logistica": {
+        "cronogramas_entregas": None,
+        "fichas_tecnicas_produtos": None,
+        "fornecedores_distribuidores": None,
+        "layouts_embalagens": None,
     },
 }
 
@@ -67,6 +81,7 @@ class TestMetricasSigpaeView:
         assert corpo["usuarios"]["com_acesso_ativo"] == {
             "total": 10,
             "ativos_30_dias": 4,
+            "novos_30_dias": 2,
         }
         mock_delay.assert_not_called()
 
