@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from django.conf import settings
 from django.core.cache import cache
 
 from apps.sigpae.constants import CHAVE_CACHE_METRICAS
@@ -30,3 +31,21 @@ class TestAtualizarMetricas:
 
         mock_obter.assert_called_once_with()
         assert cache.get(CHAVE_CACHE_METRICAS) == contrato
+
+
+class TestBeatMetricas:
+    """Garante que o cache é reaquecido em background antes de expirar."""
+
+    def test_task_agendada_no_beat(self) -> None:
+        """O beat dispara ``sigpae.atualizar_metricas`` periodicamente."""
+        agenda = settings.CELERY_BEAT_SCHEDULE.get("sigpae-atualizar-metricas")
+
+        assert agenda is not None
+        assert agenda["task"] == "sigpae.atualizar_metricas"
+
+    def test_intervalo_menor_que_ttl(self) -> None:
+        """O reaquecimento acontece antes do cache expirar (evita o zero)."""
+        assert (
+            settings.SIGPAE_METRICAS_BEAT_INTERVAL_SECONDS
+            < settings.SIGPAE_CACHE_TTL_METRICAS_SECONDS
+        )

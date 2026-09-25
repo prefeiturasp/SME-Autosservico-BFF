@@ -255,11 +255,21 @@ SIGPAE_CACHE_TTL_METRICAS_SECONDS = env.int(
     "SIGPAE_CACHE_TTL_METRICAS_SECONDS", default=300
 )
 SIGPAE_LOCK_TTL_SECONDS = env.int("SIGPAE_LOCK_TTL_SECONDS", default=30)
+# Reaquece o cache das métricas em background antes de o TTL expirar, para
+# a camada de request nunca encontrar cache frio (e devolver o fallback
+# zerado). Deve ser menor que SIGPAE_CACHE_TTL_METRICAS_SECONDS.
+SIGPAE_METRICAS_BEAT_INTERVAL_SECONDS = env.int(
+    "SIGPAE_METRICAS_BEAT_INTERVAL_SECONDS", default=240
+)
 
 CELERY_BEAT_SCHEDULE = {
     "zabbix-atualizar-status-bancos": {
         "task": "zabbix.atualizar_status_bancos",
         "schedule": timedelta(seconds=ZABBIX_DATABASE_BEAT_INTERVAL_SECONDS),
+    },
+    "sigpae-atualizar-metricas": {
+        "task": "sigpae.atualizar_metricas",
+        "schedule": timedelta(seconds=SIGPAE_METRICAS_BEAT_INTERVAL_SECONDS),
     },
 }
 
