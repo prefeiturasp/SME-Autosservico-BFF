@@ -72,6 +72,20 @@ class TestMetricasSgpView:
 
         assert response.status_code == http_status.HTTP_400_BAD_REQUEST
 
+    def test_parametro_nao_inteiro(
+        self, api_client: APIClient, settings
+    ) -> None:
+        """Um ano_letivo não-inteiro retorna 400."""
+        settings.API_KEY = "chave-correta"
+
+        response = api_client.get(
+            _url(),
+            {"ano_letivo": "abc", "bimestre": "2"},
+            HTTP_X_API_KEY="chave-correta",
+        )
+
+        assert response.status_code == http_status.HTTP_400_BAD_REQUEST
+
     def test_cache_hit_devolve_valor_sem_disparar_task(
         self, api_client: APIClient, settings
     ) -> None:
