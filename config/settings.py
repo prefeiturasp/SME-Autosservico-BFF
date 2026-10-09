@@ -67,6 +67,7 @@ LOCAL_APPS = [
     "apps.azure",
     "apps.sigpae",
     "apps.sgp",
+    "apps.serap",
 ]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -274,6 +275,17 @@ SGP_METRICAS_BEAT_INTERVAL_SECONDS = env.int(
     "SGP_METRICAS_BEAT_INTERVAL_SECONDS", default=3300
 )
 
+# SERAp (mesmo padrão do SGP — o BFF orquestra/cacheia as métricas do
+# backend, por ano e bimestre). O beat mantém quente o período corrente;
+# o intervalo deve ser menor que o TTL.
+SERAP_CACHE_TTL_METRICAS_SECONDS = env.int(
+    "SERAP_CACHE_TTL_METRICAS_SECONDS", default=3600
+)
+SERAP_LOCK_TTL_SECONDS = env.int("SERAP_LOCK_TTL_SECONDS", default=60)
+SERAP_METRICAS_BEAT_INTERVAL_SECONDS = env.int(
+    "SERAP_METRICAS_BEAT_INTERVAL_SECONDS", default=3300
+)
+
 CELERY_BEAT_SCHEDULE = {
     "zabbix-atualizar-status-bancos": {
         "task": "zabbix.atualizar_status_bancos",
@@ -286,6 +298,10 @@ CELERY_BEAT_SCHEDULE = {
     "sgp-aquecer-periodo-corrente": {
         "task": "sgp.aquecer_periodo_corrente",
         "schedule": timedelta(seconds=SGP_METRICAS_BEAT_INTERVAL_SECONDS),
+    },
+    "serap-aquecer-periodo-corrente": {
+        "task": "serap.aquecer_periodo_corrente",
+        "schedule": timedelta(seconds=SERAP_METRICAS_BEAT_INTERVAL_SECONDS),
     },
 }
 
