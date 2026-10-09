@@ -7,6 +7,8 @@ orquestração das métricas do SGP.
 
 CAMINHO_METRICAS = "/api/v1/sgp/coped/metricas/"
 
+TIMEOUT_HTTP_SEGUNDOS = 30
+
 
 def chave_cache_metricas(ano_letivo: int, bimestre: int) -> str:
     """Monta a chave de cache do contrato, por ano letivo e bimestre."""
