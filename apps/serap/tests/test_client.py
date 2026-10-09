@@ -1,4 +1,4 @@
-"""Testes do cliente HTTP de métricas do SGP."""
+"""Testes do cliente HTTP de métricas do SERAp."""
 
 from typing import Any
 from unittest.mock import MagicMock
@@ -7,8 +7,8 @@ from unittest.mock import patch
 import httpx
 import pytest
 
-from apps.sgp.client import BackendMetricasError
-from apps.sgp.client import obter_metricas
+from apps.serap.client import BackendMetricasError
+from apps.serap.client import obter_metricas
 
 
 def _mock_cliente(mock_cls: MagicMock, resposta: MagicMock) -> MagicMock:
@@ -32,17 +32,22 @@ def _resposta_ok(corpo: object) -> MagicMock:
 class TestObterMetricas:
     """Testes cobrindo obter_metricas()."""
 
-    def test_retorna_o_contrato(self, settings) -> None:
-        """Uma resposta JSON de objeto é devolvida como dicionário."""
+    def test_retorna_o_contrato_e_envia_ano_e_bimestre(self, settings) -> None:
+        """Chama o backend com ano/bimestre e devolve o JSON de objeto."""
         settings.AUTOSSERVICO_BACKEND_URL = "https://backend"
         settings.AUTOSSERVICO_BACKEND_API_KEY = "chave"
-        contrato: dict[str, Any] = {"atualizado_em": None, "usuarios": {}}
+        contrato: dict[str, Any] = {"atualizado_em": None, "provas": {}}
 
         with patch("apps.core.client_backend.httpx.Client") as mock_cls:
-            _mock_cliente(mock_cls, _resposta_ok(contrato))
+            cliente = _mock_cliente(mock_cls, _resposta_ok(contrato))
             resultado = obter_metricas(2026, 2)
 
         assert resultado == contrato
+        cliente.get.assert_called_once_with(
+            "https://backend/api/v1/serap/provas/metricas/",
+            headers={settings.API_KEY_HEADER: "chave"},
+            params={"ano": 2026, "bimestre": 2},
+        )
 
     @patch("apps.core.client_backend.httpx.Client")
     def test_resposta_nao_json_levanta_erro(
