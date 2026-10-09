@@ -1,6 +1,6 @@
 """Celery tasks da integração de métricas do SIGPAE.
 
-O retry de transporte já é feito dentro de ``apps.sigpae.client``; a task
+O retry de transporte já é feito em ``apps.core.client_backend``; a task
 apenas consulta o backend e grava o resultado no cache. Se falhar, a
 chave de cache continua ausente e a próxima requisição tenta de novo.
 """

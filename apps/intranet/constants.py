@@ -2,8 +2,6 @@
 
 CAMINHO_METRICAS = "/api/v1/intranet/metricas/"
 
-TIMEOUT_HTTP_SEGUNDOS = 30
-
 PERIODO_GERAL = "geral"
 
 # Mesmos valores aceitos pelo backend.
