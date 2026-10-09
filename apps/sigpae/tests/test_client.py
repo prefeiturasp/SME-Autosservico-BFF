@@ -38,13 +38,13 @@ class TestObterMetricas:
         settings.AUTOSSERVICO_BACKEND_API_KEY = "chave"
         contrato: dict[str, Any] = {"atualizado_em": None, "usuarios": {}}
 
-        with patch("apps.sigpae.client.httpx.Client") as mock_cls:
+        with patch("apps.core.client_backend.httpx.Client") as mock_cls:
             _mock_cliente(mock_cls, _resposta_ok(contrato))
             resultado = obter_metricas()
 
         assert resultado == contrato
 
-    @patch("apps.sigpae.client.httpx.Client")
+    @patch("apps.core.client_backend.httpx.Client")
     def test_resposta_nao_json_levanta_erro(
         self, mock_cls: MagicMock, settings
     ) -> None:
@@ -61,8 +61,8 @@ class TestObterMetricas:
         resposta = _resposta_ok({"ok": True})
 
         with (
-            patch("apps.sigpae.client.time.sleep"),
-            patch("apps.sigpae.client.httpx.Client") as mock_cls,
+            patch("apps.core.client_backend.time.sleep"),
+            patch("apps.core.client_backend.httpx.Client") as mock_cls,
         ):
             cliente = _mock_cliente(mock_cls, resposta)
             cliente.get.side_effect = [httpx.ConnectError("down"), resposta]
@@ -71,7 +71,7 @@ class TestObterMetricas:
         assert resultado == {"ok": True}
         assert cliente.get.call_count == 2
 
-    @patch("apps.sigpae.client.httpx.Client")
+    @patch("apps.core.client_backend.httpx.Client")
     def test_erro_http_nao_retriavel_propaga_sem_repetir(
         self, mock_cls: MagicMock, settings
     ) -> None:

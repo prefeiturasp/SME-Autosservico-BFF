@@ -38,7 +38,7 @@ class TestObterMetricas:
         settings.AUTOSSERVICO_BACKEND_API_KEY = "chave"
         contrato: dict[str, Any] = {"atualizado_em": None, "provas": {}}
 
-        with patch("apps.serap.client.httpx.Client") as mock_cls:
+        with patch("apps.core.client_backend.httpx.Client") as mock_cls:
             cliente = _mock_cliente(mock_cls, _resposta_ok(contrato))
             resultado = obter_metricas(2026, 2)
 
@@ -49,7 +49,7 @@ class TestObterMetricas:
             params={"ano": 2026, "bimestre": 2},
         )
 
-    @patch("apps.serap.client.httpx.Client")
+    @patch("apps.core.client_backend.httpx.Client")
     def test_resposta_nao_json_levanta_erro(
         self, mock_cls: MagicMock, settings
     ) -> None:
@@ -66,8 +66,8 @@ class TestObterMetricas:
         resposta = _resposta_ok({"ok": True})
 
         with (
-            patch("apps.serap.client.time.sleep"),
-            patch("apps.serap.client.httpx.Client") as mock_cls,
+            patch("apps.core.client_backend.time.sleep"),
+            patch("apps.core.client_backend.httpx.Client") as mock_cls,
         ):
             cliente = _mock_cliente(mock_cls, resposta)
             cliente.get.side_effect = [httpx.ConnectError("down"), resposta]
@@ -87,8 +87,8 @@ class TestObterMetricas:
         )
 
         with (
-            patch("apps.serap.client.time.sleep"),
-            patch("apps.serap.client.httpx.Client") as mock_cls,
+            patch("apps.core.client_backend.time.sleep"),
+            patch("apps.core.client_backend.httpx.Client") as mock_cls,
         ):
             cliente = _mock_cliente(mock_cls, resposta)
             with pytest.raises(httpx.HTTPStatusError):
@@ -96,7 +96,7 @@ class TestObterMetricas:
 
         assert cliente.get.call_count == 5
 
-    @patch("apps.serap.client.httpx.Client")
+    @patch("apps.core.client_backend.httpx.Client")
     def test_erro_http_nao_retriavel_propaga_sem_repetir(
         self, mock_cls: MagicMock, settings
     ) -> None:

@@ -10,27 +10,16 @@ from typing import Any
 from django.conf import settings
 from drf_spectacular.utils import OpenApiParameter
 from drf_spectacular.utils import extend_schema
-from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.core.api.parametros import param_int
 from apps.core.cache import obter_ou_marcar_para_atualizar
 from apps.serap import fallback
 from apps.serap import tasks
 from apps.serap.api.serializers import MetricasSerapSerializer
 from apps.serap.constants import chave_cache_metricas
-
-
-def _param_int(request: Request, nome: str) -> int:
-    """Lê e valida um parâmetro inteiro obrigatório da query string."""
-    valor = request.query_params.get(nome)
-    if valor is None:
-        raise ValidationError({nome: "Parâmetro obrigatório."})
-    try:
-        return int(valor)
-    except (TypeError, ValueError) as exc:
-        raise ValidationError({nome: "Deve ser um inteiro."}) from exc
 
 
 class MetricasSerapView(APIView):
@@ -57,8 +46,8 @@ class MetricasSerapView(APIView):
     )
     def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Retorna o contrato de métricas do SERAp para o período."""
-        ano = _param_int(request, "ano")
-        bimestre = _param_int(request, "bimestre")
+        ano = param_int(request, "ano")
+        bimestre = param_int(request, "bimestre")
 
         payload = obter_ou_marcar_para_atualizar(
             chave_cache_metricas(ano, bimestre),
