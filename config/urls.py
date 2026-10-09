@@ -13,6 +13,7 @@ urlpatterns = [
     path(_API_V1, include("apps.azure.api.urls", namespace="azure")),
     path(_API_V1, include("apps.sigpae.api.urls", namespace="sigpae")),
     path(_API_V1, include("apps.sgp.api.urls", namespace="sgp")),
+    path(_API_V1, include("apps.intranet.api.urls", namespace="intranet")),
     path(_API_V1, include("config.api_router")),
     path(f"{_API_V1}schema/", SpectacularAPIView.as_view(), name="api-schema"),
     path(
