@@ -7,6 +7,9 @@ from psycopg.rows import dict_row
 
 from apps.core.postgres_leitura import executar_consulta_leitura
 
+# Sem usuário/senha: o teste só confere que o DSN é repassado.
+_DSN = "postgresql://host/banco"
+
 
 def _mock_conexao(mock_connect: MagicMock, linhas: list[dict]) -> MagicMock:
     """Configura ``psycopg.connect`` mockado como context manager aninhado.
@@ -41,14 +44,12 @@ class TestExecutarConsultaLeitura:
             mock_cursor = _mock_conexao(mock_connect, [{"total": 27583}])
 
             resultado = executar_consulta_leitura(
-                "postgresql://usuario:senha@host/banco",
+                _DSN,
                 "SELECT total FROM acessos",
             )
 
         assert resultado == [{"total": 27583}]
-        mock_connect.assert_called_once_with(
-            "postgresql://usuario:senha@host/banco", row_factory=dict_row
-        )
+        mock_connect.assert_called_once_with(_DSN, row_factory=dict_row)
         mock_cursor.execute.assert_called_once_with(
             "SELECT total FROM acessos", ()
         )
@@ -59,7 +60,7 @@ class TestExecutarConsultaLeitura:
             mock_cursor = _mock_conexao(mock_connect, [])
 
             executar_consulta_leitura(
-                "postgresql://usuario:senha@host/banco",
+                _DSN,
                 "SELECT * FROM acessos WHERE ano = %s",
                 (2026,),
             )
@@ -73,8 +74,6 @@ class TestExecutarConsultaLeitura:
         with patch("psycopg.connect") as mock_connect:
             _mock_conexao(mock_connect, [])
 
-            resultado = executar_consulta_leitura(
-                "postgresql://usuario:senha@host/banco", "SELECT 1"
-            )
+            resultado = executar_consulta_leitura(_DSN, "SELECT 1")
 
         assert resultado == []

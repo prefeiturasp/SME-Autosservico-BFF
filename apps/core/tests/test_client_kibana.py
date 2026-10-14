@@ -9,6 +9,9 @@ import pytest
 from apps.core.client_kibana import KibanaSearchError
 from apps.core.client_kibana import kibana_search
 
+# Fora do settings para o Sonar não tratar como credencial real.
+_CHAVE_FICTICIA = "chave-ficticia"
+
 
 def _mock_cliente(mock_cls: MagicMock, resposta: MagicMock) -> MagicMock:
     """Configura ``httpx.Client`` mockado como context manager.
@@ -35,7 +38,7 @@ class TestKibanaSearch:
         """A URL, o corpo e a autenticação seguem o formato validado na POC."""
         settings.KIBANA_URL = "https://kibana.local/"
         settings.KIBANA_USERNAME = "usuario"
-        settings.KIBANA_PASSWORD = "senha"  # noqa: S105
+        settings.KIBANA_PASSWORD = _CHAVE_FICTICIA
         resposta = MagicMock(spec=httpx.Response)
         resposta.raise_for_status.return_value = None
         resposta.json.return_value = {"rawResponse": {"hits": {"hits": []}}}
@@ -53,7 +56,7 @@ class TestKibanaSearch:
                 "body": {"size": 0},
             }
         }
-        assert kwargs["auth"] == ("usuario", "senha")
+        assert kwargs["auth"] == ("usuario", _CHAVE_FICTICIA)
 
     def test_repete_em_erro_de_transporte_ate_o_limite(self) -> None:
         """Erros de transporte são retentados até o limite de tentativas."""
