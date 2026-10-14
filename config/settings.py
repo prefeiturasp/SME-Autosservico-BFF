@@ -68,6 +68,7 @@ LOCAL_APPS = [
     "apps.sigpae",
     "apps.sgp",
     "apps.serap",
+    "apps.sigescola",
     "apps.intranet",
 ]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -287,6 +288,18 @@ SERAP_METRICAS_BEAT_INTERVAL_SECONDS = env.int(
     "SERAP_METRICAS_BEAT_INTERVAL_SECONDS", default=3300
 )
 
+# SIG-Escola (mesmo padrão do SERAp — o BFF orquestra/cacheia as métricas
+# do backend, pela combinação de filtros). O beat mantém quente só o
+# cenário padrão (período corrente, rede toda); o intervalo deve ser menor
+# que o TTL.
+SIGESCOLA_CACHE_TTL_METRICAS_SECONDS = env.int(
+    "SIGESCOLA_CACHE_TTL_METRICAS_SECONDS", default=3600
+)
+SIGESCOLA_LOCK_TTL_SECONDS = env.int("SIGESCOLA_LOCK_TTL_SECONDS", default=60)
+SIGESCOLA_METRICAS_BEAT_INTERVAL_SECONDS = env.int(
+    "SIGESCOLA_METRICAS_BEAT_INTERVAL_SECONDS", default=3300
+)
+
 # Intranet. O intervalo do beat deve ser menor que o TTL.
 INTRANET_CACHE_TTL_METRICAS_SECONDS = env.int(
     "INTRANET_CACHE_TTL_METRICAS_SECONDS", default=3600
@@ -312,6 +325,12 @@ CELERY_BEAT_SCHEDULE = {
     "serap-aquecer-periodo-corrente": {
         "task": "serap.aquecer_periodo_corrente",
         "schedule": timedelta(seconds=SERAP_METRICAS_BEAT_INTERVAL_SECONDS),
+    },
+    "sigescola-aquecer-padrao": {
+        "task": "sigescola.aquecer_padrao",
+        "schedule": timedelta(
+            seconds=SIGESCOLA_METRICAS_BEAT_INTERVAL_SECONDS
+        ),
     },
     "intranet-aquecer-periodos": {
         "task": "intranet.aquecer_periodos",
