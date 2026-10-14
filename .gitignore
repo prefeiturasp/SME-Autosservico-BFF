@@ -39,6 +39,7 @@ htmlcov/
 # Celery beat
 celerybeat-schedule
 celerybeat.pid
+celerybeat-schedule*
 
 # Sphinx documentation
 docs/_build/

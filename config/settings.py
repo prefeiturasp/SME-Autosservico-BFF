@@ -69,6 +69,7 @@ LOCAL_APPS = [
     "apps.sgp",
     "apps.serap",
     "apps.sigescola",
+    "apps.intranet",
 ]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -299,6 +300,15 @@ SIGESCOLA_METRICAS_BEAT_INTERVAL_SECONDS = env.int(
     "SIGESCOLA_METRICAS_BEAT_INTERVAL_SECONDS", default=3300
 )
 
+# Intranet. O intervalo do beat deve ser menor que o TTL.
+INTRANET_CACHE_TTL_METRICAS_SECONDS = env.int(
+    "INTRANET_CACHE_TTL_METRICAS_SECONDS", default=3600
+)
+INTRANET_LOCK_TTL_SECONDS = env.int("INTRANET_LOCK_TTL_SECONDS", default=60)
+INTRANET_METRICAS_BEAT_INTERVAL_SECONDS = env.int(
+    "INTRANET_METRICAS_BEAT_INTERVAL_SECONDS", default=3300
+)
+
 CELERY_BEAT_SCHEDULE = {
     "zabbix-atualizar-status-bancos": {
         "task": "zabbix.atualizar_status_bancos",
@@ -321,6 +331,10 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": timedelta(
             seconds=SIGESCOLA_METRICAS_BEAT_INTERVAL_SECONDS
         ),
+    },
+    "intranet-aquecer-periodos": {
+        "task": "intranet.aquecer_periodos",
+        "schedule": timedelta(seconds=INTRANET_METRICAS_BEAT_INTERVAL_SECONDS),
     },
 }
 
