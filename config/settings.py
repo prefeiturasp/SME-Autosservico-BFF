@@ -70,6 +70,7 @@ LOCAL_APPS = [
     "apps.serap",
     "apps.sigescola",
     "apps.intranet",
+    "apps.gipe",
 ]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -309,6 +310,16 @@ INTRANET_METRICAS_BEAT_INTERVAL_SECONDS = env.int(
     "INTRANET_METRICAS_BEAT_INTERVAL_SECONDS", default=3300
 )
 
+# GIPE (mesmo padrão do SERAp, por ano letivo). O beat mantém quente o ano
+# corrente; o intervalo deve ser menor que o TTL.
+GIPE_CACHE_TTL_METRICAS_SECONDS = env.int(
+    "GIPE_CACHE_TTL_METRICAS_SECONDS", default=3600
+)
+GIPE_LOCK_TTL_SECONDS = env.int("GIPE_LOCK_TTL_SECONDS", default=60)
+GIPE_METRICAS_BEAT_INTERVAL_SECONDS = env.int(
+    "GIPE_METRICAS_BEAT_INTERVAL_SECONDS", default=3300
+)
+
 CELERY_BEAT_SCHEDULE = {
     "zabbix-atualizar-status-bancos": {
         "task": "zabbix.atualizar_status_bancos",
@@ -335,6 +346,10 @@ CELERY_BEAT_SCHEDULE = {
     "intranet-aquecer-periodos": {
         "task": "intranet.aquecer_periodos",
         "schedule": timedelta(seconds=INTRANET_METRICAS_BEAT_INTERVAL_SECONDS),
+    },
+    "gipe-aquecer-ano-corrente": {
+        "task": "gipe.aquecer_ano_corrente",
+        "schedule": timedelta(seconds=GIPE_METRICAS_BEAT_INTERVAL_SECONDS),
     },
 }
 
