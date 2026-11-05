@@ -15,6 +15,7 @@ urlpatterns = [
     path(_API_V1, include("apps.sgp.api.urls", namespace="sgp")),
     path(_API_V1, include("apps.serap.api.urls", namespace="serap")),
     path(_API_V1, include("apps.sigescola.api.urls", namespace="sigescola")),
+    path(_API_V1, include("apps.gipe.api.urls", namespace="gipe")),
     path(_API_V1, include("apps.intranet.api.urls", namespace="intranet")),
     path(_API_V1, include("config.api_router")),
     path(f"{_API_V1}schema/", SpectacularAPIView.as_view(), name="api-schema"),
