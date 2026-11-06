@@ -268,10 +268,13 @@ SIGPAE_METRICAS_BEAT_INTERVAL_SECONDS = env.int(
 )
 
 # SGP (mesmo padrão do SIGPAE — o BFF orquestra/cacheia as métricas do
-# backend, por ano letivo e bimestre). O beat mantém quente o período
-# corrente; o intervalo deve ser menor que o TTL.
+# backend, por ano letivo, segmento, semestre e bimestre). O beat mantém
+# quente o período corrente; o intervalo deve ser menor que o TTL.
 SGP_CACHE_TTL_METRICAS_SECONDS = env.int(
     "SGP_CACHE_TTL_METRICAS_SECONDS", default=3600
+)
+SGP_CACHE_TTL_PERIODOS_SECONDS = env.int(
+    "SGP_CACHE_TTL_PERIODOS_SECONDS", default=6 * 3600
 )
 SGP_LOCK_TTL_SECONDS = env.int("SGP_LOCK_TTL_SECONDS", default=60)
 SGP_METRICAS_BEAT_INTERVAL_SECONDS = env.int(
