@@ -11,6 +11,8 @@ JSON de saída (não ``null``) quando não aplicável.
 
 from rest_framework import serializers
 
+from apps.zabbix.constants import GRANULARIDADES_SERIE_ACESSOS
+
 
 class ZabbixStatusSerializer(serializers.Serializer):
     """Status de disponibilidade (presets ``producao``/``filas``)."""
@@ -63,3 +65,58 @@ class JenkinsJobSummarySerializer(serializers.Serializer):
     lastBuild = JenkinsBuildInfoSerializer(required=False)
     lastSuccessfulBuild = JenkinsBuildInfoSerializer(required=False)
     lastFailedBuild = JenkinsBuildInfoSerializer(required=False)
+
+
+class ConectadosSerializer(serializers.Serializer):
+    """Conexões no hub do SGP (o total inclui a fila)."""
+
+    total = serializers.IntegerField(allow_null=True)
+    sgp = serializers.IntegerField(allow_null=True)
+    sondagem = serializers.IntegerField(allow_null=True)
+
+
+class TempoEsperaEstimadoSerializer(serializers.Serializer):
+    """Tempo de espera estimado pelo teste sintético de login."""
+
+    media_s = serializers.FloatField(allow_null=True)
+    posicao_media = serializers.IntegerField(allow_null=True)
+    testes = serializers.IntegerField()
+    atingiu_limite_teste = serializers.BooleanField()
+
+
+class ControleAcessosSgpSerializer(serializers.Serializer):
+    """Estado atual do controle de acessos do SGP."""
+
+    atualizado_em = serializers.CharField(allow_null=True)
+    limite_conexoes = serializers.IntegerField(allow_null=True)
+    conectados = ConectadosSerializer(allow_null=True)
+    em_fila = serializers.IntegerField(allow_null=True)
+    fila_iniciada_em = serializers.CharField(allow_null=True)
+    tempo_espera_estimado = TempoEsperaEstimadoSerializer(allow_null=True)
+
+
+class SerieAcessosQuerySerializer(serializers.Serializer):
+    """Filtro da série do gráfico de acessos."""
+
+    granularidade = serializers.ChoiceField(
+        choices=GRANULARIDADES_SERIE_ACESSOS
+    )
+
+
+class PontoSerieAcessosSerializer(serializers.Serializer):
+    """Ponto do gráfico, com o pico de conectados e da fila."""
+
+    inicio = serializers.CharField()
+    total = serializers.IntegerField()
+    em_fila_max = serializers.IntegerField()
+    fila_ativa = serializers.BooleanField()
+
+
+class SerieAcessosSgpSerializer(serializers.Serializer):
+    """Série do gráfico "Acompanhamento de acessos" do SGP."""
+
+    granularidade = serializers.ChoiceField(
+        choices=GRANULARIDADES_SERIE_ACESSOS
+    )
+    atualizado_em = serializers.CharField(allow_null=True)
+    pontos = PontoSerieAcessosSerializer(many=True)

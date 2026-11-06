@@ -11,22 +11,42 @@ from django.core.cache import cache
 
 from apps.sgp import client
 from apps.sgp import periodo
+from apps.sgp.constants import CHAVE_CACHE_PERIODOS
+from apps.sgp.constants import SEGMENTO_FUNDAMENTAL_MEDIO
 from apps.sgp.constants import chave_cache_metricas
 
 
 @shared_task(name="sgp.atualizar_metricas")
-def atualizar_metricas(ano_letivo: int, bimestre: int) -> None:
+def atualizar_metricas(
+    ano_letivo: int,
+    segmento: str,
+    semestre: int | None,
+    bimestre: int,
+) -> None:
     """Consulta o backend e atualiza o cache das métricas do SGP."""
-    resultado = client.obter_metricas(ano_letivo, bimestre)
+    resultado = client.obter_metricas(ano_letivo, segmento, semestre, bimestre)
     cache.set(
-        chave_cache_metricas(ano_letivo, bimestre),
+        chave_cache_metricas(ano_letivo, segmento, semestre, bimestre),
         resultado,
         timeout=settings.SGP_CACHE_TTL_METRICAS_SECONDS,
     )
 
 
+@shared_task(name="sgp.atualizar_periodos")
+def atualizar_periodos() -> None:
+    """Consulta o backend e atualiza o cache das opções de período."""
+    cache.set(
+        CHAVE_CACHE_PERIODOS,
+        client.obter_periodos(),
+        timeout=settings.SGP_CACHE_TTL_PERIODOS_SECONDS,
+    )
+
+
 @shared_task(name="sgp.aquecer_periodo_corrente")
 def aquecer_periodo_corrente() -> None:
-    """Mantém quente o cache do período letivo corrente (via beat)."""
+    """Mantém quente o cache do bimestre corrente (via beat).
+
+    Só Fundamental/Médio, que é o padrão do painel. A EJA vai sob demanda.
+    """
     ano_letivo, bimestre = periodo.periodo_corrente()
-    atualizar_metricas(ano_letivo, bimestre)
+    atualizar_metricas(ano_letivo, SEGMENTO_FUNDAMENTAL_MEDIO, None, bimestre)

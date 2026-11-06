@@ -223,6 +223,19 @@ ZABBIX_DATABASE_BEAT_INTERVAL_SECONDS = env.int(
     "ZABBIX_DATABASE_BEAT_INTERVAL_SECONDS", default=90
 )
 ZABBIX_LOCK_TTL_SECONDS = env.int("ZABBIX_LOCK_TTL_SECONDS", default=30)
+# Controle de acessos do SGP: estado atual via beat, série do gráfico sob demanda.
+ZABBIX_CONTROLE_ACESSOS_BEAT_INTERVAL_SECONDS = env.int(
+    "ZABBIX_CONTROLE_ACESSOS_BEAT_INTERVAL_SECONDS", default=60
+)
+ZABBIX_CACHE_TTL_CONTROLE_ACESSOS_SECONDS = env.int(
+    "ZABBIX_CACHE_TTL_CONTROLE_ACESSOS_SECONDS", default=90
+)
+ZABBIX_CACHE_TTL_SERIE_ACESSOS_SECONDS = env.int(
+    "ZABBIX_CACHE_TTL_SERIE_ACESSOS_SECONDS", default=3600
+)
+ZABBIX_CACHE_TTL_SERIE_ACESSOS_HORA_SECONDS = env.int(
+    "ZABBIX_CACHE_TTL_SERIE_ACESSOS_HORA_SECONDS", default=300
+)
 
 # Azure DevOps (mesma regra do Zabbix: a camada de request nunca chama o
 # Azure diretamente — só lê o cache; quem chama é uma Celery task, ver
@@ -268,10 +281,13 @@ SIGPAE_METRICAS_BEAT_INTERVAL_SECONDS = env.int(
 )
 
 # SGP (mesmo padrão do SIGPAE — o BFF orquestra/cacheia as métricas do
-# backend, por ano letivo e bimestre). O beat mantém quente o período
-# corrente; o intervalo deve ser menor que o TTL.
+# backend, por ano letivo, segmento, semestre e bimestre). O beat mantém
+# quente o período corrente; o intervalo deve ser menor que o TTL.
 SGP_CACHE_TTL_METRICAS_SECONDS = env.int(
     "SGP_CACHE_TTL_METRICAS_SECONDS", default=3600
+)
+SGP_CACHE_TTL_PERIODOS_SECONDS = env.int(
+    "SGP_CACHE_TTL_PERIODOS_SECONDS", default=6 * 3600
 )
 SGP_LOCK_TTL_SECONDS = env.int("SGP_LOCK_TTL_SECONDS", default=60)
 SGP_METRICAS_BEAT_INTERVAL_SECONDS = env.int(
@@ -324,6 +340,12 @@ CELERY_BEAT_SCHEDULE = {
     "zabbix-atualizar-status-bancos": {
         "task": "zabbix.atualizar_status_bancos",
         "schedule": timedelta(seconds=ZABBIX_DATABASE_BEAT_INTERVAL_SECONDS),
+    },
+    "zabbix-atualizar-controle-acessos": {
+        "task": "zabbix.atualizar_controle_acessos",
+        "schedule": timedelta(
+            seconds=ZABBIX_CONTROLE_ACESSOS_BEAT_INTERVAL_SECONDS
+        ),
     },
     "sigpae-atualizar-metricas": {
         "task": "sigpae.atualizar_metricas",

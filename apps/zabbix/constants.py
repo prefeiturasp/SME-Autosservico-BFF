@@ -257,3 +257,33 @@ REGEX_AMBIENTE_HOMOLOG = re.compile(
     r"^(homolog|homologacao|hml|hmg|develop|dev|staging|stage)$",
     re.IGNORECASE,
 )
+
+# Controle de acessos do SGP (host monitor-fila-novosgp). Os itens vêm do hub
+# de notificações e do teste sintético de login.
+HOSTID_CONTROLE_ACESSOS_SGP = "10762"
+CHAVE_LIMITE_CONEXOES = "max.conexoes"
+CHAVE_CONECTADOS = "usuarios.conectados"
+CHAVE_CONECTADOS_SGP = "usuarios.conectados.sgp"
+CHAVE_CONECTADOS_SONDAGEM = "usuarios.conectados.sondagem"
+CHAVE_AGUARDANDO = "usuarios.aguardando"
+CHAVE_TEMPO_LOGIN_TESTE = "time.login"
+CHAVE_POSICAO_FILA_TESTE = "start.position.queue"
+CHAVES_CONTROLE_ACESSOS_SGP = (
+    CHAVE_LIMITE_CONEXOES,
+    CHAVE_CONECTADOS,
+    CHAVE_CONECTADOS_SGP,
+    CHAVE_CONECTADOS_SONDAGEM,
+    CHAVE_AGUARDANDO,
+    CHAVE_TEMPO_LOGIN_TESTE,
+    CHAVE_POSICAO_FILA_TESTE,
+)
+
+# O teste sintético desiste do login após 600 s.
+LIMITE_TESTE_LOGIN_SEGUNDOS = 600
+# O teste roda a cada 10 min, então 1 h dá umas 6 amostras pro tempo médio.
+JANELA_TEMPO_ESPERA_SEGUNDOS = 3600
+JANELA_INICIO_FILA_SEGUNDOS = 24 * 3600
+
+# O host só é monitorado desde 2026.
+ANO_INICIO_SERIE_ACESSOS = 2026
+GRANULARIDADES_SERIE_ACESSOS = ("hora", "dia", "mes", "ano")
