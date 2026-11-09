@@ -17,6 +17,7 @@ from django.core.cache import cache
 
 from apps.zabbix import cache as zabbix_cache
 from apps.zabbix.constants import CONFIGURACAO_BANCOS_POR_SISTEMA
+from apps.zabbix.services import controle_acessos as servico_controle_acessos
 from apps.zabbix.services import database as servico_database
 from apps.zabbix.services import jenkins as servico_jenkins
 from apps.zabbix.services import status as servico_status
@@ -76,3 +77,34 @@ def atualizar_status_bancos() -> None:
     for sistema, configuracoes in CONFIGURACAO_BANCOS_POR_SISTEMA.items():
         if configuracoes:
             atualizar_status_banco_sistema.delay(sistema)
+
+
+@shared_task(name="zabbix.atualizar_controle_acessos")
+def atualizar_controle_acessos() -> None:
+    """Atualiza o cache do controle de acessos do SGP (beat, a cada 1 min)."""
+    cache.set(
+        zabbix_cache.chave_controle_acessos(),
+        servico_controle_acessos.obter_estado_atual(),
+        timeout=settings.ZABBIX_CACHE_TTL_CONTROLE_ACESSOS_SECONDS,
+    )
+
+
+@shared_task(name="zabbix.atualizar_serie_controle_acessos")
+def atualizar_serie_controle_acessos(granularidade: str) -> None:
+    """Atualiza o cache da série do gráfico de acessos do SGP.
+
+    A visão por hora tem TTL menor porque o dia corrente vai crescendo.
+
+    Args:
+        granularidade: ``hora``, ``dia``, ``mes`` ou ``ano``.
+    """
+    timeout = (
+        settings.ZABBIX_CACHE_TTL_SERIE_ACESSOS_HORA_SECONDS
+        if granularidade == "hora"
+        else settings.ZABBIX_CACHE_TTL_SERIE_ACESSOS_SECONDS
+    )
+    cache.set(
+        zabbix_cache.chave_serie_acessos(granularidade),
+        servico_controle_acessos.obter_serie(granularidade),
+        timeout=timeout,
+    )

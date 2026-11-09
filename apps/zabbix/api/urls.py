@@ -2,8 +2,10 @@
 
 from django.urls import path
 
+from apps.zabbix.api.views import ControleAcessosSgpView
 from apps.zabbix.api.views import DatabaseStatusView
 from apps.zabbix.api.views import JenkinsJobSummaryView
+from apps.zabbix.api.views import SerieAcessosSgpView
 from apps.zabbix.api.views import SistemasDisponibilidadeView
 from apps.zabbix.api.views import StatusPresetView
 
@@ -24,5 +26,15 @@ urlpatterns = [
         "zabbix/jenkins/job/",
         JenkinsJobSummaryView.as_view(),
         name="jenkins-job",
+    ),
+    path(
+        "zabbix/sgp/controle-acessos/",
+        ControleAcessosSgpView.as_view(),
+        name="sgp-controle-acessos",
+    ),
+    path(
+        "zabbix/sgp/controle-acessos/serie/",
+        SerieAcessosSgpView.as_view(),
+        name="sgp-controle-acessos-serie",
     ),
 ]
