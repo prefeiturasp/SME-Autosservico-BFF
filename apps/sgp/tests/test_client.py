@@ -9,6 +9,7 @@ import pytest
 
 from apps.sgp.client import BackendMetricasError
 from apps.sgp.client import obter_metricas
+from apps.sgp.client import obter_periodos
 
 
 def _mock_cliente(mock_cls: MagicMock, resposta: MagicMock) -> MagicMock:
@@ -40,7 +41,7 @@ class TestObterMetricas:
 
         with patch("apps.core.client_backend.httpx.Client") as mock_cls:
             _mock_cliente(mock_cls, _resposta_ok(contrato))
-            resultado = obter_metricas(2026, 2)
+            resultado = obter_metricas(2026, "fundamental_medio", None, 2)
 
         assert resultado == contrato
 
@@ -53,7 +54,7 @@ class TestObterMetricas:
         _mock_cliente(mock_cls, _resposta_ok(["lista"]))
 
         with pytest.raises(BackendMetricasError):
-            obter_metricas(2026, 2)
+            obter_metricas(2026, "fundamental_medio", None, 2)
 
     def test_retenta_erro_transitorio(self, settings) -> None:
         """Uma falha de conexão é retentada até obter sucesso."""
@@ -66,7 +67,7 @@ class TestObterMetricas:
         ):
             cliente = _mock_cliente(mock_cls, resposta)
             cliente.get.side_effect = [httpx.ConnectError("down"), resposta]
-            resultado = obter_metricas(2026, 2)
+            resultado = obter_metricas(2026, "fundamental_medio", None, 2)
 
         assert resultado == {"ok": True}
         assert cliente.get.call_count == 2
@@ -87,7 +88,7 @@ class TestObterMetricas:
         ):
             cliente = _mock_cliente(mock_cls, resposta)
             with pytest.raises(httpx.HTTPStatusError):
-                obter_metricas(2026, 2)
+                obter_metricas(2026, "fundamental_medio", None, 2)
 
         assert cliente.get.call_count == 5
 
@@ -106,6 +107,60 @@ class TestObterMetricas:
         cliente = _mock_cliente(mock_cls, resposta)
 
         with pytest.raises(httpx.HTTPStatusError):
-            obter_metricas(2026, 2)
+            obter_metricas(2026, "fundamental_medio", None, 2)
 
         assert cliente.get.call_count == 1
+
+
+class TestParametros:
+    """Cobre os parâmetros repassados ao backend."""
+
+    @pytest.mark.parametrize(
+        ("args", "esperado"),
+        [
+            (
+                (2026, "fundamental_medio", None, 2),
+                {
+                    "ano_letivo": 2026,
+                    "bimestre": 2,
+                    "segmento": "fundamental_medio",
+                },
+            ),
+            (
+                (2026, "eja", 2, 1),
+                {
+                    "ano_letivo": 2026,
+                    "bimestre": 1,
+                    "segmento": "eja",
+                    "semestre": 2,
+                },
+            ),
+        ],
+    )
+    def test_metricas_repassam_segmento_e_semestre(
+        self,
+        settings,
+        args: tuple[int, str, int | None, int],
+        esperado: dict[str, Any],
+    ) -> None:
+        """O semestre só vai na query string quando informado (EJA)."""
+        settings.AUTOSSERVICO_BACKEND_URL = "https://backend"
+
+        with patch("apps.core.client_backend.httpx.Client") as mock_cls:
+            cliente = _mock_cliente(mock_cls, _resposta_ok({}))
+            obter_metricas(*args)
+
+        assert cliente.get.call_args.kwargs["params"] == esperado
+
+    def test_periodos_chamam_o_caminho_do_backend(self, settings) -> None:
+        """As opções de período vêm de ``/sgp/coped/periodos/``."""
+        settings.AUTOSSERVICO_BACKEND_URL = "https://backend"
+
+        with patch("apps.core.client_backend.httpx.Client") as mock_cls:
+            cliente = _mock_cliente(mock_cls, _resposta_ok({"periodos": []}))
+            resultado = obter_periodos()
+
+        assert resultado == {"periodos": []}
+        assert cliente.get.call_args.args[0] == (
+            "https://backend/api/v1/sgp/coped/periodos/"
+        )

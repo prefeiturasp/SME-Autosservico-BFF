@@ -10,8 +10,10 @@ from apps.core.cache import hash_chave as _hash
 from apps.core.cache import obter_ou_marcar_para_atualizar
 
 __all__ = [
+    "chave_controle_acessos",
     "chave_database",
     "chave_jenkins",
+    "chave_serie_acessos",
     "chave_status",
     "obter_ou_marcar_para_atualizar",
 ]
@@ -54,3 +56,20 @@ def chave_database(sistema: str) -> str:
         Chave de cache determinística para esse sistema.
     """
     return f"zabbix:database:{_hash(sistema)}"
+
+
+def chave_controle_acessos() -> str:
+    """Chave de cache do controle de acessos do SGP."""
+    return "zabbix:sgp:controle_acessos"
+
+
+def chave_serie_acessos(granularidade: str) -> str:
+    """Chave de cache da série do gráfico de acessos do SGP.
+
+    Args:
+        granularidade: ``hora``, ``dia``, ``mes`` ou ``ano``.
+
+    Returns:
+        Chave de cache por granularidade.
+    """
+    return f"zabbix:sgp:controle_acessos:serie:{granularidade}"

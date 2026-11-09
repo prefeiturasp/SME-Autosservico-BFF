@@ -28,6 +28,12 @@ _CONTRATO = {
     "atualizado_em": "2026-08-25T10:00:00-03:00",
     "ano_letivo": 2026,
     "bimestre": 2,
+    "periodo": {
+        "ano_letivo": 2026,
+        "segmento": "fundamental_medio",
+        "semestre": None,
+        "bimestre": 2,
+    },
     "usuarios": {
         "com_acesso_ativo": {"valor": 8398, "variacao_30_dias": 453},
         "de_unidades_educacionais": {
@@ -40,15 +46,36 @@ _CONTRATO = {
     "frequencias": {"lancadas": 18432, "esperadas": 21760, "percentual": 84.7},
     "sondagens": {"realizadas": 1243, "esperadas": 2683},
     "fechamento": {
+        "esperado": 35179,
         "nao_iniciados": 8398,
-        "processado_sucesso": 7530,
-        "processado_pendencias": 6853,
-        "processado_erro": 12398,
+        "processado_sucesso": 12398,
+        "processado_pendencias": 7530,
+        "processado_erro": 6853,
+        "por_dre": [
+            {
+                "dre": "BT",
+                "previsto": 3156,
+                "nao_iniciados": 1736,
+                "processado_sucesso": 980,
+                "processado_pendencias": 240,
+                "processado_erro": 200,
+            }
+        ],
     },
     "conselho_classe": {
+        "esperado": 2480,
         "nao_iniciados": 204,
         "em_andamento": 387,
         "processado_sucesso": 1889,
+        "por_dre": [
+            {
+                "dre": "BT",
+                "previsto": 424,
+                "nao_iniciados": 30,
+                "em_andamento": 60,
+                "processado_sucesso": 334,
+            }
+        ],
     },
 }
 
@@ -91,7 +118,10 @@ class TestMetricasSgpView:
     ) -> None:
         """Em cache hit, devolve o contrato cacheado e não dispara task."""
         settings.API_KEY = "chave-correta"
-        cache.set(chave_cache_metricas(2026, 2), _CONTRATO)
+        cache.set(
+            chave_cache_metricas(2026, "fundamental_medio", None, 2),
+            _CONTRATO,
+        )
 
         with patch("apps.sgp.tasks.atualizar_metricas.delay") as mock_delay:
             response = api_client.get(
@@ -105,6 +135,7 @@ class TestMetricasSgpView:
             "esperadas": 21760,
             "percentual": 84.7,
         }
+        assert corpo["fechamento"]["por_dre"][0]["dre"] == "BT"
         mock_delay.assert_not_called()
 
     def test_cache_miss_dispara_task_e_devolve_fallback(
@@ -119,7 +150,68 @@ class TestMetricasSgpView:
             )
 
         assert response.status_code == http_status.HTTP_200_OK
-        mock_delay.assert_called_once_with(2026, 2)
+        mock_delay.assert_called_once_with(2026, "fundamental_medio", None, 2)
         corpo = response.json()
         assert corpo["frequencias"] is None
         assert corpo["ano_letivo"] == 2026
+        assert corpo["periodo"]["segmento"] == "fundamental_medio"
+
+    def test_eja_usa_chave_e_task_do_semestre(
+        self, api_client: APIClient, settings
+    ) -> None:
+        """Segmento e semestre da EJA entram na task e no fallback."""
+        settings.API_KEY = "chave-correta"
+
+        with patch("apps.sgp.tasks.atualizar_metricas.delay") as mock_delay:
+            response = api_client.get(
+                _url(),
+                {
+                    "ano_letivo": "2026",
+                    "bimestre": "1",
+                    "segmento": "eja",
+                    "semestre": "2",
+                },
+                HTTP_X_API_KEY="chave-correta",
+            )
+
+        assert response.status_code == http_status.HTTP_200_OK
+        mock_delay.assert_called_once_with(2026, "eja", 2, 1)
+        assert response.json()["periodo"] == {
+            "ano_letivo": 2026,
+            "segmento": "eja",
+            "semestre": 2,
+            "bimestre": 1,
+        }
+
+    @pytest.mark.parametrize(
+        ("params", "campo"),
+        [
+            ({"bimestre": "1", "segmento": "eja"}, "semestre"),
+            (
+                {"bimestre": "3", "segmento": "eja", "semestre": "1"},
+                "bimestre",
+            ),
+            ({"bimestre": "5"}, "bimestre"),
+            ({"bimestre": "1", "segmento": "infantil"}, "segmento"),
+        ],
+    )
+    def test_filtros_invalidos(
+        self,
+        api_client: APIClient,
+        settings,
+        params: dict[str, str],
+        campo: str,
+    ) -> None:
+        """Filtros fora das regras do segmento retornam 400."""
+        settings.API_KEY = "chave-correta"
+
+        with patch("apps.sgp.tasks.atualizar_metricas.delay") as mock_delay:
+            response = api_client.get(
+                _url(),
+                {"ano_letivo": "2026", **params},
+                HTTP_X_API_KEY="chave-correta",
+            )
+
+        assert response.status_code == http_status.HTTP_400_BAD_REQUEST
+        assert campo in response.json()
+        mock_delay.assert_not_called()
