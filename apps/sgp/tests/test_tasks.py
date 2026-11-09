@@ -7,9 +7,11 @@ import pytest
 from django.conf import settings
 from django.core.cache import cache
 
+from apps.sgp.constants import CHAVE_CACHE_PERIODOS
 from apps.sgp.constants import chave_cache_metricas
 from apps.sgp.tasks import aquecer_periodo_corrente
 from apps.sgp.tasks import atualizar_metricas
+from apps.sgp.tasks import atualizar_periodos
 
 
 @pytest.fixture(autouse=True)
@@ -28,10 +30,27 @@ class TestAtualizarMetricas:
         with patch(
             "apps.sgp.client.obter_metricas", return_value=contrato
         ) as mock_obter:
-            atualizar_metricas(2026, 2)
+            atualizar_metricas(2026, "eja", 2, 1)
 
-        mock_obter.assert_called_once_with(2026, 2)
-        assert cache.get(chave_cache_metricas(2026, 2)) == contrato
+        mock_obter.assert_called_once_with(2026, "eja", 2, 1)
+        assert cache.get(chave_cache_metricas(2026, "eja", 2, 1)) == contrato
+
+
+class TestAtualizarPeriodos:
+    """Testes cobrindo a task atualizar_periodos."""
+
+    def test_grava_periodos_no_cache(self) -> None:
+        """A task grava as opções de período do backend no cache."""
+        contrato: dict[str, Any] = {"periodos": []}
+
+        with patch("apps.sgp.client.obter_periodos", return_value=contrato):
+            atualizar_periodos()
+
+        assert cache.get(CHAVE_CACHE_PERIODOS) == contrato
+
+    def test_ttl_proprio(self) -> None:
+        """As opções de período têm TTL configurável próprio."""
+        assert settings.SGP_CACHE_TTL_PERIODOS_SECONDS > 0
 
 
 class TestAquecerPeriodoCorrente:
@@ -47,7 +66,8 @@ class TestAquecerPeriodoCorrente:
         ):
             aquecer_periodo_corrente()
 
-        assert cache.get(chave_cache_metricas(2026, 3)) == contrato
+        chave = chave_cache_metricas(2026, "fundamental_medio", None, 3)
+        assert cache.get(chave) == contrato
 
 
 class TestBeatMetricas:

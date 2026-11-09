@@ -20,12 +20,17 @@ from rest_framework.views import APIView
 
 from apps.zabbix import cache as zabbix_cache
 from apps.zabbix import tasks
+from apps.zabbix.api.serializers import ControleAcessosSgpSerializer
 from apps.zabbix.api.serializers import DatabaseStatusSerializer
 from apps.zabbix.api.serializers import JenkinsJobSummarySerializer
+from apps.zabbix.api.serializers import SerieAcessosQuerySerializer
+from apps.zabbix.api.serializers import SerieAcessosSgpSerializer
 from apps.zabbix.api.serializers import SistemaDisponibilidadeSerializer
 from apps.zabbix.api.serializers import ZabbixStatusSerializer
 from apps.zabbix.constants import CONFIGURACAO_BANCOS_POR_SISTEMA
 from apps.zabbix.constants import PRESETS_STATUS
+from apps.zabbix.services.controle_acessos import estado_indisponivel
+from apps.zabbix.services.controle_acessos import serie_indisponivel
 from apps.zabbix.services.database import sistema_configurado
 from apps.zabbix.services.disponibilidade import listar_sistemas
 from apps.zabbix.services.status import status_a_partir_de_triggers
@@ -252,6 +257,71 @@ class JenkinsJobSummaryView(APIView):
         )
         if payload is None:
             payload = {}
+
+        serializer = self.serializer_class(data=payload)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.validated_data)
+
+
+class ControleAcessosSgpView(APIView):
+    """Estado atual do controle de acessos do SGP.
+
+    Com o cache frio, dispara a task e devolve os campos nulos.
+    """
+
+    serializer_class = ControleAcessosSgpSerializer
+
+    @extend_schema(
+        tags=["zabbix"],
+        summary="Controle de acessos do SGP (Zabbix)",
+        operation_id="zabbix_sgp_controle_acessos",
+        responses=ControleAcessosSgpSerializer,
+    )
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        """Retorna o estado atual do cache."""
+        payload = zabbix_cache.obter_ou_marcar_para_atualizar(
+            zabbix_cache.chave_controle_acessos(),
+            tasks.atualizar_controle_acessos,
+            (),
+            ttl_lock=settings.ZABBIX_LOCK_TTL_SECONDS,
+        )
+        if payload is None:
+            payload = estado_indisponivel()
+
+        serializer = self.serializer_class(data=payload)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.validated_data)
+
+
+class SerieAcessosSgpView(APIView):
+    """Série do gráfico de acessos do SGP.
+
+    Com o cache frio, dispara a task da granularidade e devolve vazio.
+    """
+
+    serializer_class = SerieAcessosSgpSerializer
+
+    @extend_schema(
+        tags=["zabbix"],
+        summary="Série de acessos do SGP (Zabbix)",
+        operation_id="zabbix_sgp_controle_acessos_serie",
+        parameters=[SerieAcessosQuerySerializer],
+        responses=SerieAcessosSgpSerializer,
+    )
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        """Retorna os pontos do gráfico para a granularidade pedida."""
+        filtros = SerieAcessosQuerySerializer(data=request.query_params)
+        filtros.is_valid(raise_exception=True)
+        granularidade = filtros.validated_data["granularidade"]
+
+        payload = zabbix_cache.obter_ou_marcar_para_atualizar(
+            zabbix_cache.chave_serie_acessos(granularidade),
+            tasks.atualizar_serie_controle_acessos,
+            (granularidade,),
+            ttl_lock=settings.ZABBIX_LOCK_TTL_SECONDS,
+        )
+        if payload is None:
+            payload = serie_indisponivel(granularidade)
 
         serializer = self.serializer_class(data=payload)
         serializer.is_valid(raise_exception=True)
