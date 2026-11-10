@@ -71,6 +71,7 @@ LOCAL_APPS = [
     "apps.sigescola",
     "apps.intranet",
     "apps.gipe",
+    "apps.bensfisicos",
 ]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -336,6 +337,18 @@ GIPE_METRICAS_BEAT_INTERVAL_SECONDS = env.int(
     "GIPE_METRICAS_BEAT_INTERVAL_SECONDS", default=3300
 )
 
+# Bens Físicos (mesmo padrão do SIGPAE, sem filtros). O beat mantém o cache
+# quente; o intervalo deve ser menor que o TTL.
+BENS_FISICOS_CACHE_TTL_METRICAS_SECONDS = env.int(
+    "BENS_FISICOS_CACHE_TTL_METRICAS_SECONDS", default=3600
+)
+BENS_FISICOS_LOCK_TTL_SECONDS = env.int(
+    "BENS_FISICOS_LOCK_TTL_SECONDS", default=60
+)
+BENS_FISICOS_METRICAS_BEAT_INTERVAL_SECONDS = env.int(
+    "BENS_FISICOS_METRICAS_BEAT_INTERVAL_SECONDS", default=3300
+)
+
 CELERY_BEAT_SCHEDULE = {
     "zabbix-atualizar-status-bancos": {
         "task": "zabbix.atualizar_status_bancos",
@@ -372,6 +385,12 @@ CELERY_BEAT_SCHEDULE = {
     "gipe-aquecer-ano-corrente": {
         "task": "gipe.aquecer_ano_corrente",
         "schedule": timedelta(seconds=GIPE_METRICAS_BEAT_INTERVAL_SECONDS),
+    },
+    "bensfisicos-atualizar-metricas": {
+        "task": "bensfisicos.atualizar_metricas",
+        "schedule": timedelta(
+            seconds=BENS_FISICOS_METRICAS_BEAT_INTERVAL_SECONDS
+        ),
     },
 }
 
